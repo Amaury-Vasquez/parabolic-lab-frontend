@@ -1,6 +1,6 @@
 import { Badge, Button } from "amvasdev-ui";
 import Card from "@/components/Card";
-import { Salon } from "@/constants/salones";
+import { Salon } from "@/types/salon";
 
 interface SalonCardProps {
   salon: Salon;
@@ -14,7 +14,7 @@ const SalonCard = ({ salon }: SalonCardProps) => {
     <Card contentClassName="justify-between">
       {/* Card Header with Settings */}
       <div className="flex justify-between items-start">
-        <h2 className="card-title">{salon.nombre}</h2>
+        <h2 className="card-title">{salon.nombresalon}</h2>
         <div className="dropdown dropdown-end">
           <Button tabIndex={0} variant="ghost" size="sm" className="btn-square">
             <svg
@@ -47,7 +47,7 @@ const SalonCard = ({ salon }: SalonCardProps) => {
             <p className="text-xs opacity-60 uppercase mb-1">
               Código de acceso:
             </p>
-            <p className="font-mono font-bold text-lg">{salon.codigo}</p>
+            <p className="font-mono font-bold text-lg">{salon.codigoacceso}</p>
           </div>
           <Button variant="ghost" size="sm" className="btn-square">
             <svg
@@ -110,7 +110,7 @@ const SalonCard = ({ salon }: SalonCardProps) => {
             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
           />
         </svg>
-        <span className="text-sm">{salon.estudiantes} estudiantes</span>
+        <span className="text-sm">{salon.num_estudiantes} estudiantes</span>
       </div>
 
       {/* Action Buttons */}

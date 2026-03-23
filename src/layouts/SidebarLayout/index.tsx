@@ -3,6 +3,7 @@ import { useOnClickOutside, useToggle } from "amvasdev-ui";
 import clsx from "clsx";
 import { ReactNode, useRef } from "react";
 import Heading from "./Heading";
+import Navbar from "@/components/Navbar";
 import Sidebar, { SidebarRoute } from "@/components/Sidebar";
 import { STUDENT_NAV_LINKS, TEACHER_NAV_LINKS } from "@/constants/navLinks";
 import useIsMobileOrTablet from "@/hooks/useIsMobileOrTablet";
@@ -65,6 +66,7 @@ const SidebarLayout = ({ children, panelType }: SidebarLayoutProps) => {
           }
         )}
       >
+        <Navbar isAuthenticated fixed={false} showHamburger={false} />
         {children}
       </div>
     </div>

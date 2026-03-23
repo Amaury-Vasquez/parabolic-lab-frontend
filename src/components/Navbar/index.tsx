@@ -1,11 +1,15 @@
 "use client";
-import { HamburgerMenu } from "amvasdev-ui";
-import { CircleUserRound, LogIn, Menu, Rocket, UserPlus } from "lucide-react";
-import Link from "next/link";
-import CustomLink from "@/components/CustomLink";
-import { NavLink, LOGIN_LINK, REGISTER_LINK } from "@/constants/navLinks";
-import { usePathname } from "next/navigation";
+import { Button } from "amvasdev-ui";
 import clsx from "clsx";
+import { LogIn, LogOut, Rocket, UserPlus } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useCookies } from "react-cookie";
+import AuthMenu from "./AuthMenu";
+import NavMenu from "./NavMenu";
+import CustomLink from "@/components/CustomLink";
+import { ACCESS_TOKEN_COOKIE } from "@/constants/auth";
+import { NavLink, LOGIN_LINK, REGISTER_LINK } from "@/constants/navLinks";
+import useLogout from "@/hooks/useLogout";
 
 const AUTH_LINKS = [
   {
@@ -23,33 +27,35 @@ const AUTH_LINKS = [
 interface NavbarProps {
   navigationItems?: NavLink[];
   showHamburger?: boolean;
-  showAuthLinks?: boolean;
+  isAuthenticated?: boolean;
+  fixed?: boolean;
 }
 
 const Navbar = ({
   navigationItems = [],
   showHamburger = true,
-  showAuthLinks = true,
+  isAuthenticated,
+  fixed = true,
 }: NavbarProps) => {
   const pathname = usePathname();
+  const logout = useLogout();
+  const [cookies] = useCookies([ACCESS_TOKEN_COOKIE]);
+  const authenticated = isAuthenticated ?? !!cookies[ACCESS_TOKEN_COOKIE];
 
   return (
-    <nav className="navbar bg-base-100 fixed top-0 left-0 right-0 z-50 shadow-md">
+    <nav
+      className={clsx("navbar bg-base-100 z-50 shadow-md", {
+        "fixed top-0 left-0 right-0": fixed,
+        "sticky top-0": !fixed,
+      })}
+    >
       {/* Hamburger Menu - Left */}
       <div className="navbar-start">
         {showHamburger && navigationItems.length > 0 ? (
-          // We are adding pathname as a key to close the component when we navigate to another page
-          <HamburgerMenu icon={Menu} key={pathname}>
-            <ul className="flex flex-col gap-2 min-w-64 max-w-full">
-              {navigationItems.map((item) => (
-                <li key={item.label}>
-                  <Link href={item.href} className="w-full">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </HamburgerMenu>
+          <NavMenu
+            navigationItems={navigationItems}
+            isAuthenticated={authenticated}
+          />
         ) : null}
       </div>
 
@@ -61,45 +67,41 @@ const Navbar = ({
         </CustomLink>
       </div>
 
-      {/* Auth Links - Right */}
+      {/* Auth Section - Right (Desktop) */}
       <div className="navbar-end gap-2 hidden lg:flex">
-        {showAuthLinks ? (
+        {authenticated ? (
+          <Button variant="ghost" size="sm" onClick={logout}>
+            <LogOut size="16" strokeWidth="2.5" />
+            Cerrar Sesión
+          </Button>
+        ) : (
           <>
-            {AUTH_LINKS.map((link) => (
-              <CustomLink
-                key={link.label}
-                href={link.href}
-                variant="ghost"
-                size="sm"
-                className={clsx({
-                  "text-primary": pathname === link.href,
-                })}
-              >
-                {link.icon}
-                {link.label}
-              </CustomLink>
-            ))}
-          </>
-        ) : null}
-      </div>
-      <div className="navbar-end lg:hidden">
-        <HamburgerMenu icon={CircleUserRound} key={pathname} position="right">
-          <ul className="flex flex-col gap-2 min-w-64 max-w-full">
-            {AUTH_LINKS.map((link) => (
-              <li key={link.label}>
-                <Link
+            {AUTH_LINKS.filter((link) => link.href !== pathname).map(
+              (link) => (
+                <CustomLink
+                  key={link.label}
                   href={link.href}
-                  className={clsx("w-full", {
-                    "text-primary": pathname === link.href,
-                  })}
+                  variant="ghost"
+                  size="sm"
                 >
                   {link.icon}
                   {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </HamburgerMenu>
+                </CustomLink>
+              ),
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Auth Section - Right (Mobile) */}
+      <div className="navbar-end lg:hidden">
+        {authenticated ? (
+          <Button variant="ghost" size="sm" onClick={logout}>
+            <LogOut size="16" strokeWidth="2.5" />
+          </Button>
+        ) : (
+          <AuthMenu />
+        )}
       </div>
     </nav>
   );

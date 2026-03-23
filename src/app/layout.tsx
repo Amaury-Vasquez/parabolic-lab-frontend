@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import type { Metadata } from "next";
 import "amvasdev-ui/dist/index.css";
 import "./globals.css";
+import AppCookiesProvider from "@/providers/CookiesProvider";
+import QueryProvider from "@/providers/QueryProvider";
 
 export const metadata: Metadata = {
   title: "Parabolic lab",
@@ -15,7 +17,11 @@ interface RootLayoutProps {
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AppCookiesProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </AppCookiesProvider>
+      </body>
     </html>
   );
 }

@@ -4,10 +4,11 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import SalonCard from "./SalonCard";
 import CreateClassroomModal from "@/components/CreateClassroomModal";
-import { SALONES } from "@/constants/salones";
+import { useMySalones } from "@/queries/useMySalones";
 
 const Docente = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: salones, isLoading } = useMySalones();
 
   return (
     <div className="p-8">
@@ -26,11 +27,24 @@ const Docente = () => {
       </div>
 
       {/* Salones Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {SALONES.map((salon, index) => (
-          <SalonCard key={index} salon={salon} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <span className="loading loading-spinner loading-lg" />
+        </div>
+      ) : salones && salones.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {salones.map((salon) => (
+            <SalonCard key={salon.idsalon} salon={salon} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 opacity-60">
+          <p className="text-lg">No tienes salones asignados aún.</p>
+          <p className="text-sm mt-1">
+            Crea un nuevo salón para comenzar.
+          </p>
+        </div>
+      )}
 
       {/* Create Classroom Modal */}
       <CreateClassroomModal

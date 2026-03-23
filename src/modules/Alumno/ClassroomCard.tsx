@@ -3,7 +3,7 @@ import { Badge, Button } from "amvasdev-ui";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import Card from "@/components/Card";
-import { Salon } from "@/constants/salones";
+import { Salon } from "@/types/salon";
 
 interface ClassroomCardProps {
   salon: Salon;
@@ -17,7 +17,7 @@ const ClassroomCard = ({ salon }: ClassroomCardProps) => {
     <Card contentClassName="justify-between">
       {/* Card Header */}
       <div>
-        <h2 className="card-title">{salon.nombre}</h2>
+        <h2 className="card-title">{salon.nombresalon}</h2>
       </div>
 
       {/* Assigned Scenarios */}
@@ -51,12 +51,12 @@ const ClassroomCard = ({ salon }: ClassroomCardProps) => {
       {/* Students Count */}
       <div className="flex items-center gap-2 mt-3">
         <Users className="w-4 h-4" />
-        <span className="text-sm">{salon.estudiantes} estudiantes</span>
+        <span className="text-sm">{salon.num_estudiantes} estudiantes</span>
       </div>
 
       {/* Action Button */}
       <div className="card-actions flex-col mt-6 w-full">
-        <Link href={`/alumno/salon/${salon.codigo}`} className="w-full">
+        <Link href={`/alumno/salon/${salon.codigoacceso}`} className="w-full">
           <Button variant="primary" className="w-full">
             Ver Salón
           </Button>

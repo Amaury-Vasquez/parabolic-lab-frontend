@@ -1,11 +1,9 @@
-import { Building2, GraduationCap, UserCircle } from "lucide-react";
-import RegistrationCard from "./RegistrationCard";
-import RegistrationCardWithInput from "./RegistrationCardWithInput";
-import { REGISTER_INSTITUTION_LINK } from "@/constants/navLinks";
+import Link from "next/link";
 import CardsView from "./CardsView";
+import { LOGIN_LINK } from "@/constants/navLinks";
 
 const Registro = () => (
-  <div className="bg-gradient-to-br from-base-100 to-base-200 flex items-center justify-center px-4 py-12">
+  <div className="bg-gradient-to-br from-base-100 to-base-200 flex items-center justify-center px-4 py-8">
     <div className="w-full max-w-6xl">
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -16,6 +14,12 @@ const Registro = () => (
         </p>
       </div>
       <CardsView />
+      <p className="text-center mt-8 text-sm">
+        ¿Ya tienes cuenta?{" "}
+        <Link href={LOGIN_LINK} className="link link-primary font-medium">
+          Inicia sesión aquí
+        </Link>
+      </p>
     </div>
   </div>
 );

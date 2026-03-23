@@ -226,11 +226,11 @@ import { helperFunction } from "@/utils/helpers";
 - Each route group has its own `layout.tsx` that applies the appropriate wrapper layout
 
 ### Module Pattern for Pages:
-Each page should have its content defined in a separate module in `src/modules/` to keep the page files clean and allow for SSR when needed.
+Each page should have its content defined in a separate module in `src/modules/` to keep the page files clean and handle SSR data fetching.
 
 **Naming Convention:**
 - Module directory name matches the route segment (e.g., `Docente/` for `/docente` route)
-- Page file exports a descriptive function name (e.g., `DocentePage`) using `export default function`
+- Page file exports a descriptive function name (e.g., `DocentePage`) using `export default async function`
 - Module components use arrow function pattern: `const ComponentName = () => (...);`
 - Subcomponents are extracted to separate files within the module directory
 - Component-specific constants can be defined in the same file as the component
@@ -240,56 +240,158 @@ Each page should have its content defined in a separate module in `src/modules/`
 src/
 ├── app/
 │   └── docente/
-│       └── page.tsx          # Exports DocentePage function
+│       └── page.tsx          # Server component — SSR prefetch + HydrationBoundary
 ├── modules/
 │   └── Docente/              # Module named after route
-│       ├── index.tsx         # Exports Docente component
+│       ├── index.tsx         # "use client" — uses useQuery (picks up hydrated data)
 │       ├── SalonCard.tsx     # Subcomponents
 │       └── HeroSection.tsx   # Section components (with their own constants)
+├── fetchers/
+│   └── salones.ts            # Server-safe: query key + fetch function
+├── queries/
+│   └── useMySalones.ts       # "use client": useQuery hook (imports from fetchers/)
 └── constants/
     └── salones.ts            # Shared data constants (SCREAMING_SNAKE_CASE)
 ```
 
 **Example:**
 ```tsx
-// src/app/docente/page.tsx
+// src/app/docente/page.tsx (server component — handles SSR prefetch)
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { cookies } from "next/headers";
+import { ACCESS_TOKEN_COOKIE } from "@/constants/auth";
 import Docente from "@/modules/Docente";
+import { fetchMySalones, MY_SALONES_QUERY_KEY } from "@/fetchers/salones";
 
-export default function DocentePage() {
-  return <Docente />;
+export default async function DocentePage() {
+  const queryClient = new QueryClient();
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+
+  if (token) {
+    await queryClient.prefetchQuery({
+      queryKey: MY_SALONES_QUERY_KEY,
+      queryFn: () => fetchMySalones(token),
+    });
+  }
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <Docente />
+    </HydrationBoundary>
+  );
 }
 
-// src/modules/Docente/index.tsx
+// src/modules/Docente/index.tsx ("use client" — useQuery picks up hydrated data)
 "use client";
 import SalonCard from "./SalonCard";
-import { SALONES } from "@/constants/salones";
+import { useMySalones } from "@/queries/useMySalones";
 
-const Docente = () => (
-  <div>
-    {SALONES.map((salon, index) => (
-      <SalonCard key={index} salon={salon} />
-    ))}
-  </div>
-);
+const Docente = () => {
+  const { data: salones } = useMySalones();
+
+  return (
+    <div>
+      {salones?.map((salon) => (
+        <SalonCard key={salon.idsalon} salon={salon} />
+      ))}
+    </div>
+  );
+};
 
 export default Docente;
-
-// src/modules/Docente/SalonCard.tsx
-import { Salon } from "@/constants/salones";
-
-interface SalonCardProps {
-  salon: Salon;
-}
-
-const SalonCard = ({ salon }: SalonCardProps) => (
-  <div>{salon.nombre}</div>
-);
-
-export default SalonCard;
 ```
 
 **Benefits:**
-- Keeps page files minimal for potential SSR logic
+- SSR prefetch eliminates hydration mismatches — server and client render the same data
 - Organizes related components together
 - Makes components reusable and testable
 - Separates data/constants from presentation logic
+
+### SSR Data Fetching with React Query:
+**All data fetching queries MUST be prefetched server-side in `page.tsx`** to avoid hydration mismatches. Never rely solely on client-side `useQuery` for initial data — the server renders one state (empty/loading) while the client renders another, causing React hydration errors.
+
+**Pattern:** Use TanStack Query's Hydration API — `prefetchQuery` + `dehydrate` + `HydrationBoundary` in the server component (`page.tsx`), and the client module's `useQuery` automatically picks up the prefetched data.
+
+**File convention — split server-safe fetchers from client hooks:**
+
+`"use client"` makes an entire module a client boundary, so server components cannot import from it. Query keys and fetch functions must live in `src/fetchers/`, separate from the `useQuery` hooks in `src/queries/`.
+
+- **`src/fetchers/<resource>.ts`** (no `"use client"`) — query key constant (SCREAMING_SNAKE_CASE) + fetch function. Importable by both server and client code.
+- **`src/queries/use<Resource>.ts`** (`"use client"`) — the `useQuery` hook. Imports from the fetcher file.
+
+```tsx
+// src/fetchers/salones.ts (server-safe — no "use client")
+import { get } from "@/services/api";
+import { Salon } from "@/types/salon";
+
+export const MY_SALONES_QUERY_KEY = ["salones", "me"];
+
+export async function fetchMySalones(token: string): Promise<Salon[]> {
+  return get<Salon[]>("/salones/me", {
+    "x-stack-access-token": token,
+  });
+}
+
+// src/queries/useMySalones.ts ("use client" — hook only)
+"use client";
+import { useQuery } from "@tanstack/react-query";
+import { useCookies } from "react-cookie";
+import { fetchMySalones, MY_SALONES_QUERY_KEY } from "@/fetchers/salones";
+import { ACCESS_TOKEN_COOKIE } from "@/constants/auth";
+
+export function useMySalones() {
+  const [cookies] = useCookies([ACCESS_TOKEN_COOKIE]);
+  const token = cookies[ACCESS_TOKEN_COOKIE];
+
+  return useQuery({
+    queryKey: MY_SALONES_QUERY_KEY,
+    queryFn: () => fetchMySalones(token),
+    enabled: !!token,
+  });
+}
+```
+
+**Page file (`page.tsx`) — server-side prefetch:**
+```tsx
+// src/app/docente/page.tsx (server component — imports from fetcher)
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { cookies } from "next/headers";
+import { ACCESS_TOKEN_COOKIE } from "@/constants/auth";
+import Docente from "@/modules/Docente";
+import { fetchMySalones, MY_SALONES_QUERY_KEY } from "@/fetchers/salones";
+
+export default async function DocentePage() {
+  const queryClient = new QueryClient();
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+
+  if (token) {
+    await queryClient.prefetchQuery({
+      queryKey: MY_SALONES_QUERY_KEY,
+      queryFn: () => fetchMySalones(token),
+    });
+  }
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <Docente />
+    </HydrationBoundary>
+  );
+}
+```
+
+**Key rules:**
+- `page.tsx` is always a **server component** (no `"use client"`) — this is where SSR prefetching happens
+- **Never import from a `"use client"` file in a server component** — query keys and fetch functions go in `src/fetchers/`
+- Use `cookies()` from `next/headers` to access auth tokens server-side
+- The module component keeps its `useQuery` hook unchanged — `HydrationBoundary` hydrates the cache automatically
+- **Never fetch data only on the client** (`useQuery` without server prefetch) for data that renders on initial page load
