@@ -2,25 +2,29 @@
 import { Input, Modal } from "amvasdev-ui";
 import { useState } from "react";
 import useModalFormConfirm from "@/hooks/useModalFormConfirm";
+import { useCreateSalon } from "@/queries/useCreateSalon";
 
 interface CreateClassroomModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const CreateClassroomModal = ({
-  isOpen,
-  onClose,
-}: CreateClassroomModalProps) => {
+const CreateClassroomModal = ({ isOpen, onClose }: CreateClassroomModalProps) => {
   const [classroomName, setClassroomName] = useState("");
   const { formRef, handleConfirmClick } = useModalFormConfirm();
+  const { mutate: crearSalon, isPending } = useCreateSalon();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement classroom creation logic
-    console.log("Creating classroom:", classroomName);
-    setClassroomName("");
-    onClose();
+    crearSalon(
+      { nombresalon: classroomName },
+      {
+        onSuccess: () => {
+          setClassroomName("");
+          onClose();
+        },
+      }
+    );
   };
 
   const handleCancel = () => {
@@ -33,10 +37,10 @@ const CreateClassroomModal = ({
       onClose={handleCancel}
       title="Crear Nuevo Salón"
       confirmButton={{
-        children: "Crear Salón",
+        children: isPending ? "Creando..." : "Crear Salón",
         variant: "primary",
         onClick: handleConfirmClick,
-        disabled: classroomName.trim() === "",
+        disabled: classroomName.trim() === "" || isPending,
       }}
     >
       <form
