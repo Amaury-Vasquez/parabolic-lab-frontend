@@ -7,6 +7,8 @@ import PhysicsConfigBuilder from "@/components/PhysicsConfigBuilder";
 import { DIFFICULTY_LEVELS } from "@/constants/difficultyLevels";
 import { PHYSICS_DEFAULTS } from "@/constants/physicsDefaults";
 import { SCENARIO_TYPES } from "@/constants/scenarioTypes";
+import { useCreateEscenario } from "@/queries/useCreateEscenario";
+import { DIFFICULTY_MAP, TYPE_MAP } from "@/utils/scenarioMappers";
 import {
   ScenarioEditorProvider,
   useScenarioEditor,
@@ -64,7 +66,7 @@ const ScenarioEditorForm = ({
 
   const [errors, setErrors] = useState<ScenarioFormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
-
+  const { mutateAsync: crearEscenario } = useCreateEscenario();
   // Sync context physics config with form data
   useEffect(() => {
     setFormData((prev) => ({
@@ -96,38 +98,34 @@ const ScenarioEditorForm = ({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+  if (!validateForm()) return;
 
-    setIsSaving(true);
+  setIsSaving(true);
 
-    try {
-      // TODO: Implementar llamada a API
-      // if (isEditing) {
-      //   await updateScenario(scenarioId, formData);
-      // } else {
-      //   await createScenario(classroomId, formData);
-      // }
+  try {
+    await crearEscenario({
+      idsalon: classroomId,
+      nombre: formData.nombre,
+      descripcion: formData.descripcion || undefined,
+      niveldificultad: DIFFICULTY_MAP[formData.niveldificultad] ?? "principiante",
+      tipoescenario: TYPE_MAP[formData.tipoescenario] ?? "simulacion",
+      objetivosaprendizaje: formData.objetivosaprendizaje || undefined,
+      instrucciones: formData.instrucciones || undefined,
+      tiempolimite: formData.tiempolimite || undefined,
+      intentospermitidos: formData.intentospermitidos,
+      configuracionescenario: formData.configuracionescenario as Record<string, unknown>,
+    });
 
-      // Simulación de guardado
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("Guardando escenario:", formData);
-
-      // Redirigir a la lista de escenarios
-      router.push(`/docente/salon/${classroomId}/escenarios`);
-    } catch (error) {
-      console.error("Error al guardar escenario:", error);
-      alert(
-        "Hubo un error al guardar el escenario. Por favor, intenta de nuevo."
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    router.push(`/docente/salon/${classroomId}`);
+  } catch (error) {
+    console.error("Error al guardar escenario:", error);
+    alert("Hubo un error al guardar el escenario. Por favor, intenta de nuevo.");
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   const handleCancel = () => {
     router.back();

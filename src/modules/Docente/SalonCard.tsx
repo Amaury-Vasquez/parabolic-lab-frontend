@@ -117,7 +117,7 @@ const SalonCard = ({ salon }: SalonCardProps) => {
 
       {/* Action Buttons */}
       <div className="card-actions flex-col mt-6 w-full">
-        <Button variant="primary" className="w-full"  onClick={() => router.push(`/docente/salon/${salon.idsalon}`)}>
+        <Button variant="primary" className="w-full"  onClick={() => router.push(`/docente/salon/${salon.idsalon}/escenarios/nuevo/editar`)}>
           <svg
             className="w-4 h-4"
             fill="none"

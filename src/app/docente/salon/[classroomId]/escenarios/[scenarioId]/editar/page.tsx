@@ -3,21 +3,11 @@ import ScenarioEditor from "@/modules/ScenarioEditor";
 interface PageProps {
   params: Promise<{
     classroomId: string;
-    scenarioId: string;
   }>;
 }
 
-export default async function EditarEscenarioPage({ params }: PageProps) {
-  const { classroomId, scenarioId } = await params;
+export default async function NuevoEscenarioPage({ params }: PageProps) {
+  const { classroomId } = await params;
 
-  // TODO: Fetch scenario data from API
-  // const scenario = await getScenario(scenarioId);
-
-  return (
-    <ScenarioEditor
-      classroomId={classroomId}
-      scenarioId={scenarioId}
-      // initialData={scenario}
-    />
-  );
+  return <ScenarioEditor classroomId={classroomId} />;
 }

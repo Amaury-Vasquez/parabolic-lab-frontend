@@ -15,7 +15,7 @@ const HeaderSection = ({
   <div className="flex w-full items-center gap-2 justify-between py-4">
     <div className="flex-1 flex flex-col gap-2">
       <h1 className="text-2xl md:text-3xl font-bold text-ellipsis">
-        Física 101
+        {classroomId}
       </h1>
       <p className="mt-1 text-ellipsis">Salón #{classroomId}</p>
     </div>
