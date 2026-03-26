@@ -1,7 +1,6 @@
 "use client";
 import { Input, Modal } from "amvasdev-ui";
 import { useState } from "react";
-import useModalFormConfirm from "@/hooks/useModalFormConfirm";
 import { useCreateSalon } from "@/queries/useCreateSalon";
 
 interface CreateClassroomModalProps {
@@ -11,17 +10,19 @@ interface CreateClassroomModalProps {
 
 const CreateClassroomModal = ({ isOpen, onClose }: CreateClassroomModalProps) => {
   const [classroomName, setClassroomName] = useState("");
-  const { formRef, handleConfirmClick } = useModalFormConfirm();
   const { mutate: crearSalon, isPending } = useCreateSalon();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleConfirm = () => {
+    if (classroomName.trim() === "") return;
     crearSalon(
-      { nombresalon: classroomName },
+      { nombresalon: classroomName.trim() },
       {
         onSuccess: () => {
           setClassroomName("");
           onClose();
+        },
+        onError: () => {
+          alert("Error al crear el salón. Intenta de nuevo.");
         },
       }
     );
@@ -39,24 +40,19 @@ const CreateClassroomModal = ({ isOpen, onClose }: CreateClassroomModalProps) =>
       confirmButton={{
         children: isPending ? "Creando..." : "Crear Salón",
         variant: "primary",
-        onClick: handleConfirmClick,
+        onClick: handleConfirm,
         disabled: classroomName.trim() === "" || isPending,
       }}
     >
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col py-4 gap-4"
-        ref={formRef}
-      >
+      <div className="flex flex-col py-4 gap-4">
         <Input
           id="classroom-name"
           label="Nombre del Salón"
           placeholder="Física 101"
           value={classroomName}
           onChange={(e) => setClassroomName(e.currentTarget.value)}
-          required
         />
-      </form>
+      </div>
     </Modal>
   ) : null;
 };

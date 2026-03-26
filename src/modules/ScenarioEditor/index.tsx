@@ -22,7 +22,7 @@ import type {
 import InteractiveSimulator from "./InteractiveSimulator";
 
 interface ScenarioEditorProps {
-  classroomId: string;
+  classroomId?: string;
   scenarioId?: string;
   initialData?: Scenario;
 }
