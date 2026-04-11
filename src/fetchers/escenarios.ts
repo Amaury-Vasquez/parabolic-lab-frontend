@@ -1,8 +1,9 @@
 import { get, post, patch, del } from "@/services/api";
-import { Scenario } from "@/types/scenario";
+import { Scenario } from "@/models/scenario";
 
 export const ESCENARIOS_SALON_QUERY_KEY = (salonId: string) => ["escenarios", salonId];
 export const MIS_ESCENARIOS_QUERY_KEY = ["escenarios", "mis"];
+export const ESCENARIO_QUERY_KEY = (idescenario: string) => ["escenarios", idescenario];
 
 export async function fetchEscenariosBySalon(
   token: string,
@@ -13,6 +14,13 @@ export async function fetchEscenariosBySalon(
 
 export async function fetchMisEscenarios(token: string): Promise<Scenario[]> {
   return get<Scenario[]>("/escenarios/me", { token });
+}
+
+export async function fetchEscenario(
+  token: string,
+  idescenario: string
+): Promise<Scenario> {
+  return get<Scenario>(`/escenarios/${idescenario}`, { token });
 }
 
 export async function createEscenario(
@@ -57,4 +65,16 @@ export async function deleteEscenario(
   idescenario: string
 ): Promise<void> {
   return del<void>(`/escenarios/${idescenario}`, { token });
+}
+
+export async function asignarEscenario(
+  token: string,
+  idescenario: string,
+  idsalon: string
+): Promise<Scenario> {
+  return post<Scenario>(
+    `/escenarios/${idescenario}/asignar`,
+    { idsalon },
+    { token }
+  );
 }

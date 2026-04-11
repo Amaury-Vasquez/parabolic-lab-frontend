@@ -8,6 +8,7 @@ import { DIFFICULTY_LEVELS } from "@/constants/difficultyLevels";
 import { PHYSICS_DEFAULTS } from "@/constants/physicsDefaults";
 import { SCENARIO_TYPES } from "@/constants/scenarioTypes";
 import { useCreateEscenario } from "@/queries/useCreateEscenario";
+import { useUpdateEscenario } from "@/mutations/useUpdateEscenario";
 import { DIFFICULTY_MAP, TYPE_MAP } from "@/utils/scenarioMappers";
 import {
   ScenarioEditorProvider,
@@ -67,6 +68,7 @@ const ScenarioEditorForm = ({
   const [errors, setErrors] = useState<ScenarioFormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const { mutateAsync: crearEscenario } = useCreateEscenario();
+  const { mutateAsync: actualizarEscenario } = useUpdateEscenario();
   // Sync context physics config with form data
   useEffect(() => {
     setFormData((prev) => ({
@@ -105,8 +107,7 @@ const ScenarioEditorForm = ({
   setIsSaving(true);
 
   try {
-    await crearEscenario({
-      idsalon: classroomId,
+    const datos = {
       nombre: formData.nombre,
       descripcion: formData.descripcion || undefined,
       niveldificultad: DIFFICULTY_MAP[formData.niveldificultad] ?? "principiante",
@@ -116,7 +117,22 @@ const ScenarioEditorForm = ({
       tiempolimite: formData.tiempolimite || undefined,
       intentospermitidos: formData.intentospermitidos,
       configuracionescenario: formData.configuracionescenario as Record<string, unknown>,
-    });
+    };
+
+    if (isEditing && scenarioId) {
+      await actualizarEscenario({
+        ...datos,
+        idescenario: scenarioId,
+      });
+    } else {
+      if (!classroomId) {
+        throw new Error("ID del salón es requerido para crear un escenario");
+      }
+      await crearEscenario({
+        idsalon: classroomId,
+        ...datos,
+      });
+    }
 
     router.push(`/docente/salon/${classroomId}`);
   } catch (error) {

@@ -1,9 +1,12 @@
 "use client";
 import { Button } from "amvasdev-ui";
-import { Plus, Pencil, BookOpen } from "lucide-react";
+import { Plus, Pencil, BookOpen, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import AsignarEscenarioModal from "./AsignarEscenarioModal";
 import { useMisEscenarios } from "@/queries/useMisEscenarios";
 import { useMySalones } from "@/queries/useMySalones";
+import type { Scenario } from "@/models/scenario";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   principiante: "badge-success",
@@ -23,6 +26,8 @@ const Biblioteca = () => {
   const router = useRouter();
   const { data: escenarios, isLoading } = useMisEscenarios();
   const { data: salones } = useMySalones();
+  const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false);
+  const [escenarioSeleccionado, setEscenarioSeleccionado] = useState<Scenario | null>(null);
 
   const getSalonNombre = (idsalon: string) => {
     const salon = salones?.find((s) => s.idsalon === idsalon);
@@ -104,6 +109,18 @@ const Biblioteca = () => {
                   <Pencil size={14} />
                   Editar
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    setEscenarioSeleccionado(escenario);
+                    setIsAsignarModalOpen(true);
+                  }}
+                >
+                  <Share2 size={14} />
+                  Asignar
+                </Button>
               </div>
             </div>
           ))}
@@ -116,6 +133,17 @@ const Biblioteca = () => {
             Crea tu primer escenario para asignarlo a tus salones
           </p>
         </div>
+      )}
+      {escenarioSeleccionado && (
+        <AsignarEscenarioModal
+          isOpen={isAsignarModalOpen}
+          onClose={() => {
+            setIsAsignarModalOpen(false);
+            setEscenarioSeleccionado(null);
+          }}
+          escenario={escenarioSeleccionado}
+          salones={salones}
+        />
       )}
     </div>
   );

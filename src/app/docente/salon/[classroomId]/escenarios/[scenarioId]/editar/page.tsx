@@ -1,13 +1,28 @@
+"use client";
+import { useEscenario } from "@/queries/useEscenario";
 import ScenarioEditor from "@/modules/ScenarioEditor";
+import { useParams } from "next/navigation";
 
-interface PageProps {
-  params: Promise<{
-    classroomId: string;
-  }>;
-}
+export default function EditarEscenarioPage() {
+  const params = useParams();
+  const classroomId = params.classroomId as string;
+  const scenarioId = params.scenarioId as string;
 
-export default async function NuevoEscenarioPage({ params }: PageProps) {
-  const { classroomId } = await params;
+  const { data: escenario, isLoading } = useEscenario(scenarioId);
 
-  return <ScenarioEditor classroomId={classroomId} />;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <span className="loading loading-spinner loading-lg" />
+      </div>
+    );
+  }
+
+  return (
+    <ScenarioEditor
+      classroomId={classroomId}
+      scenarioId={scenarioId}
+      initialData={escenario}
+    />
+  );
 }
