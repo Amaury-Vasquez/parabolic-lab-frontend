@@ -11,6 +11,7 @@ import FiltersSection, {
 } from "./FiltersSection";
 import HeaderSection from "./HeaderSection";
 import RankingSection from "./RankingSection";
+import ManageSalonModal from "./ManageSalonModal";
 import { useMySalones } from "@/queries/useMySalones";
 
 interface ClassroomDetailProps {
@@ -40,6 +41,7 @@ const ClassroomDetail = ({
   const [difficultyFilter, setDifficultyFilter] =
     useState<DifficultyFilter>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isManageSalonModalOpen, setIsManageSalonModalOpen] = useState(false);
 
   const isStudent = userType === "alumno";
 
@@ -127,7 +129,17 @@ const ClassroomDetail = ({
         studentsCount={students.length}
         userType={userType}
         nombre={salonNombre}
+        onSettingsClick={!isStudent ? () => setIsManageSalonModalOpen(true) : undefined}
       />
+
+      {salonNombre && !isStudent ? (
+        <ManageSalonModal
+          isOpen={isManageSalonModalOpen}
+          onClose={() => setIsManageSalonModalOpen(false)}
+          salonId={classroomId}
+          salonNombre={salonNombre}
+        />
+      ) : null}
 
       <FiltersSection
         rankingType={rankingType}

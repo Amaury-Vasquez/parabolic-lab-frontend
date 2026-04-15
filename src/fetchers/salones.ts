@@ -1,4 +1,4 @@
-import { get, post } from "@/services/api";
+import { get, post, patch } from "@/services/api";
 import { Salon } from "@/types/salon";
 
 export const MY_SALONES_QUERY_KEY = ["salones", "me"];
@@ -36,7 +36,8 @@ export async function fetchSalonProgreso(
     `/salones/${salonId}/progreso`,
     { token }
   );
-  return data.estudiantes;
+  // Asegurar que siempre retorna un array, nunca undefined
+  return data?.estudiantes ?? [];
 }
 
 export async function createSalon(
@@ -44,4 +45,12 @@ export async function createSalon(
   data: { nombresalon: string }
 ): Promise<Salon> {
   return post<Salon>("/salones/", data, { token });
+}
+
+export async function updateSalon(
+  token: string,
+  idsalon: string,
+  data: { nombresalon: string }
+): Promise<Salon> {
+  return patch<Salon>(`/salones/${idsalon}`, data, { token });
 }

@@ -1,11 +1,12 @@
 "use client";
 import { Button } from "amvasdev-ui";
-import { Plus, Pencil, BookOpen, Share2 } from "lucide-react";
+import { Plus, Pencil, BookOpen, Share2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AsignarEscenarioModal from "./AsignarEscenarioModal";
 import { useMisEscenarios } from "@/queries/useMisEscenarios";
 import { useMySalones } from "@/queries/useMySalones";
+import { useDeleteEscenario } from "@/mutations/useDeleteEscenario";
 import type { Scenario } from "@/models/scenario";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -26,12 +27,30 @@ const Biblioteca = () => {
   const router = useRouter();
   const { data: escenarios, isLoading } = useMisEscenarios();
   const { data: salones } = useMySalones();
+  const { mutateAsync: eliminarEscenario } = useDeleteEscenario();
+  
   const [isAsignarModalOpen, setIsAsignarModalOpen] = useState(false);
   const [escenarioSeleccionado, setEscenarioSeleccionado] = useState<Scenario | null>(null);
 
   const getSalonNombre = (idsalon: string) => {
     const salon = salones?.find((s) => s.idsalon === idsalon);
     return salon?.nombresalon ?? "Salón desconocido";
+  };
+
+  const handleEliminarEscenario = async (escenario: Scenario) => {
+    if (
+      window.confirm(
+        `¿Estás seguro de que deseas eliminar el escenario "${escenario.nombre}"? Esta acción no se puede deshacer.`
+      )
+    ) {
+      try {
+        await eliminarEscenario(escenario.idescenario);
+        // El cache se invalidará automáticamente por el onSuccess en useDeleteEscenario
+      } catch (error) {
+        console.error("Error al eliminar escenario:", error);
+        alert("Hubo un error al eliminar el escenario. Intenta nuevamente.");
+      }
+    }
   };
 
   return (
@@ -120,6 +139,14 @@ const Biblioteca = () => {
                 >
                   <Share2 size={14} />
                   Asignar
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEliminarEscenario(escenario)}
+                  className="hover:bg-error hover:bg-opacity-20"
+                >
+                  <Trash2 size={14} />
                 </Button>
               </div>
             </div>
