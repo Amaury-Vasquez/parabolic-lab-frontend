@@ -100,53 +100,80 @@ const ScenarioEditorForm = ({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  setIsSaving(true);
+    setIsSaving(true);
 
-  try {
-    const datos = {
-      nombre: formData.nombre,
-      descripcion: formData.descripcion || undefined,
-      niveldificultad: DIFFICULTY_MAP[formData.niveldificultad] ?? "principiante",
-      tipoescenario: TYPE_MAP[formData.tipoescenario] ?? "simulacion",
-      objetivosaprendizaje: formData.objetivosaprendizaje || undefined,
-      instrucciones: formData.instrucciones || undefined,
-      tiempolimite: formData.tiempolimite || undefined,
-      intentospermitidos: formData.intentospermitidos,
-      configuracionescenario: formData.configuracionescenario as Record<string, unknown>,
-    };
+    try {
+      const datos = {
+        nombre: formData.nombre,
+        descripcion: formData.descripcion || undefined,
+        niveldificultad: DIFFICULTY_MAP[formData.niveldificultad] ?? "principiante",
+        tipoescenario: TYPE_MAP[formData.tipoescenario] ?? "simulacion",
+        objetivosaprendizaje: formData.objetivosaprendizaje || undefined,
+        instrucciones: formData.instrucciones || undefined,
+        tiempolimite: formData.tiempolimite || undefined,
+        intentospermitidos: formData.intentospermitidos,
+        configuracionescenario: formData.configuracionescenario as Record<string, unknown>,
+      };
 
-    if (isEditing && scenarioId) {
-      await actualizarEscenario({
-        ...datos,
-        idescenario: scenarioId,
-      });
-      // Después de actualizar, regresar al salón o a la biblioteca
-      if (classroomId) {
-        router.push(`/docente/salon/${classroomId}`);
+      if (isEditing && scenarioId) {
+        await actualizarEscenario({
+          ...datos,
+          idescenario: scenarioId,
+        });
+        // Después de actualizar, regresar al salón o a la biblioteca
+        if (classroomId) {
+          router.push(`/docente/salon/${classroomId}`);
+        } else {
+          router.push("/docente/biblioteca");
+        }
       } else {
+        // Crear nuevo escenario
+        // idsalon es requerido por el backend
+        const createData: Parameters<typeof crearEscenario>[0] = {
+          ...datos,
+          idsalon: classroomId!,
+        };
+
+        await crearEscenario(createData);
+        // Después de crear, redirigir a biblioteca
         router.push("/docente/biblioteca");
       }
-    } else {
-      // Crear nuevo escenario - usar salonId si está disponible, si no usar un valor por defecto
-      const salonId = classroomId || "biblioteca";
-      await crearEscenario({
-        idsalon: salonId,
-        ...datos,
-      });
-      // Después de crear, redirigir a biblioteca
-      router.push("/docente/biblioteca");
+    } catch (error) {
+      let errorMessage = "Hubo un error al guardar el escenario. Por favor, intenta de nuevo.";
+
+      if (error instanceof Error) {
+        console.error("Error al guardar escenario:", {
+          message: error.message,
+          stack: error.stack,
+        });
+
+        // Proporcionar mensajes de error más específicos
+        if (error.message.includes("Fallo en la conexión")) {
+          errorMessage = "No se puede conectar al servidor. Verifica que el backend está ejecutándose en http://localhost:8000";
+        } else if (error.message.includes("422")) {
+          errorMessage = "Los datos enviados son inválidos. Verifica que todos los campos requeridos sean correctos.";
+        } else if (error.message.includes("500")) {
+          errorMessage = `Error del servidor: ${error.message}. Revisa la consola del backend para más detalles.`;
+        } else if (error.message.includes("401") || error.message.includes("403")) {
+          errorMessage = "No tienes permisos para realizar esta acción.";
+        } else if (error.message.includes("404")) {
+          errorMessage = "El escenario no fue encontrado.";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      } else {
+        console.error("Error desconocido al guardar escenario:", error);
+      }
+
+      alert(errorMessage);
+    } finally {
+      setIsSaving(false);
     }
-  } catch (error) {
-    console.error("Error al guardar escenario:", error);
-    alert("Hubo un error al guardar el escenario. Por favor, intenta de nuevo.");
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
 
   const handleCancel = () => {
     router.back();

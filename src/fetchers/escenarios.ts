@@ -1,4 +1,5 @@
 import { get, post, patch, del } from "@/services/api";
+import { sanitizeData } from "@/utils/sanitizeData";
 import { Scenario } from "@/models/scenario";
 
 export const ESCENARIOS_SALON_QUERY_KEY = (salonId: string) => ["escenarios", salonId];
@@ -38,7 +39,9 @@ export async function createEscenario(
     configuracionescenario?: Record<string, unknown>;
   }
 ): Promise<Scenario> {
-  return post<Scenario>("/escenarios/", data, { token });
+  // Sanitizar los datos para evitar enviar campos innecesarios
+  const sanitizedData = sanitizeData(data);
+  return post<Scenario>("/escenarios/", sanitizedData, { token });
 }
 
 export async function updateEscenario(
@@ -57,7 +60,9 @@ export async function updateEscenario(
     activo: boolean;
   }>
 ): Promise<Scenario> {
-  return patch<Scenario>(`/escenarios/${idescenario}`, data, { token });
+  // Sanitizar los datos para evitar enviar campos innecesarios como fechas
+  const sanitizedData = sanitizeData(data);
+  return patch<Scenario>(`/escenarios/${idescenario}`, sanitizedData, { token });
 }
 
 export async function deleteEscenario(
