@@ -6,16 +6,18 @@ interface HeaderSectionProps {
   classroomId: string;
   studentsCount: number;
   userType?: UserType;
+  nombre?: string;
 }
 
 const HeaderSection = ({
   classroomId,
   studentsCount,
+  nombre,
 }: HeaderSectionProps) => (
   <div className="flex w-full items-center gap-2 justify-between py-4">
     <div className="flex-1 flex flex-col gap-2">
       <h1 className="text-2xl md:text-3xl font-bold text-ellipsis">
-        {classroomId}
+        {nombre || classroomId}
       </h1>
       <p className="mt-1 text-ellipsis">Salón #{classroomId}</p>
     </div>

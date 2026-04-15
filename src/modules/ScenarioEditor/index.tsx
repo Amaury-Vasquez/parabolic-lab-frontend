@@ -124,17 +124,22 @@ const ScenarioEditorForm = ({
         ...datos,
         idescenario: scenarioId,
       });
-    } else {
-      if (!classroomId) {
-        throw new Error("ID del salón es requerido para crear un escenario");
+      // Después de actualizar, regresar al salón o a la biblioteca
+      if (classroomId) {
+        router.push(`/docente/salon/${classroomId}`);
+      } else {
+        router.push("/docente/biblioteca");
       }
+    } else {
+      // Crear nuevo escenario - usar salonId si está disponible, si no usar un valor por defecto
+      const salonId = classroomId || "biblioteca";
       await crearEscenario({
-        idsalon: classroomId,
+        idsalon: salonId,
         ...datos,
       });
+      // Después de crear, redirigir a biblioteca
+      router.push("/docente/biblioteca");
     }
-
-    router.push(`/docente/salon/${classroomId}`);
   } catch (error) {
     console.error("Error al guardar escenario:", error);
     alert("Hubo un error al guardar el escenario. Por favor, intenta de nuevo.");
