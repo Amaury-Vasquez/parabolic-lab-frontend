@@ -13,3 +13,10 @@ export async function createSalon(
 ): Promise<Salon> {
   return post<Salon>("/salones/", data, { token });
 }
+
+export async function unirseASalon(
+  token: string,
+  codigoacceso: string
+): Promise<void> {
+  return post<void>("/alumnos-en-salon/unirse", { codigoacceso }, { token });
+}
