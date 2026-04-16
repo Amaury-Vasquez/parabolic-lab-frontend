@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Student } from "@/constants/students";
 import { UserType } from "@/models/users";
 import { searchIgnoreAccents } from "@/utils/string";
@@ -37,6 +38,7 @@ const ClassroomDetail = ({
   classroomId,
   userType = "docente",
 }: ClassroomDetailProps) => {
+  const router = useRouter();
   const [rankingType, setRankingType] = useState<RankingType>("totalScore");
   const [difficultyFilter, setDifficultyFilter] =
     useState<DifficultyFilter>("all");
@@ -129,6 +131,7 @@ const ClassroomDetail = ({
         studentsCount={students.length}
         userType={userType}
         nombre={salonNombre}
+        onEstudiantesClick={!isStudent ? () => router.push(`/docente/salon/${classroomId}/estudiantes`) : undefined}
         onSettingsClick={!isStudent ? () => setIsManageSalonModalOpen(true) : undefined}
       />
 

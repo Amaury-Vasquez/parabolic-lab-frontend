@@ -54,3 +54,48 @@ export async function updateSalon(
 ): Promise<Salon> {
   return patch<Salon>(`/salones/${idsalon}`, data, { token });
 }
+
+export const SALON_ESTUDIANTES_QUERY_KEY = (salonId: string) => [
+  "salones",
+  salonId,
+  "estudiantes",
+];
+
+export interface EstudianteEnSalon {
+  idalumno: string;
+  nombre: string;
+  apellido: string;
+  correo: string;
+  ultimo_acceso: string | null;
+  escenarios_completados: number;
+  total_escenarios: number;
+}
+
+export async function fetchEstudiantesBySalon(
+  token: string,
+  salonId: string
+): Promise<EstudianteEnSalon[]> {
+  return get<EstudianteEnSalon[]>(`/salones/${salonId}/estudiantes`, {
+    token,
+  });
+}
+
+export async function agregarEstudianteASalon(
+  token: string,
+  salonId: string,
+  correoAlumno: string
+): Promise<EstudianteEnSalon> {
+  return post<EstudianteEnSalon>(
+    `/salones/${salonId}/agregar-estudiante`,
+    { correo: correoAlumno },
+    { token }
+  );
+}
+
+export async function darDeBajaEstudiante(
+  token: string,
+  salonId: string,
+  idalumno: string
+): Promise<void> {
+  return del<void>(`/salones/${salonId}/estudiantes/${idalumno}`, { token });
+}
