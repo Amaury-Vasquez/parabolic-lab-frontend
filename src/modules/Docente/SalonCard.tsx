@@ -137,7 +137,11 @@ const SalonCard = ({ salon }: SalonCardProps) => {
           Asignar Escenario
           
         </Button>
-        <Button outlined className="w-full">
+        <Button
+          outlined
+          className="w-full"
+          onClick={() => router.push(`/docente/salon/${salon.idsalon}`)}
+        >
           <svg
             className="w-4 h-4"
             fill="none"

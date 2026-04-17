@@ -1,28 +1,36 @@
-"use client";
-import { useEscenario } from "@/queries/useEscenario";
-import ScenarioEditor from "@/modules/ScenarioEditor";
-import { useParams } from "next/navigation";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { cookies } from "next/headers";
+import { ACCESS_TOKEN_COOKIE } from "@/constants/auth";
+import { fetchEscenario, ESCENARIO_QUERY_KEY } from "@/fetchers/escenarios";
+import EditarEscenario from "@/modules/ScenarioEditor/EditarEscenario";
 
-export default function EditarEscenarioPage() {
-  const params = useParams();
-  const classroomId = params.classroomId as string;
-  const scenarioId = params.scenarioId as string;
+interface PageProps {
+  params: Promise<{
+    classroomId: string;
+    scenarioId: string;
+  }>;
+}
 
-  const { data: escenario, isLoading } = useEscenario(scenarioId);
+export default async function EditarEscenarioPage({ params }: PageProps) {
+  const { classroomId, scenarioId } = await params;
+  const queryClient = new QueryClient();
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-lg" />
-      </div>
-    );
+  if (token) {
+    await queryClient.prefetchQuery({
+      queryKey: ESCENARIO_QUERY_KEY(scenarioId),
+      queryFn: () => fetchEscenario(token, scenarioId),
+    });
   }
 
   return (
-    <ScenarioEditor
-      classroomId={classroomId}
-      scenarioId={scenarioId}
-      initialData={escenario}
-    />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <EditarEscenario classroomId={classroomId} scenarioId={scenarioId} />
+    </HydrationBoundary>
   );
 }
