@@ -1,7 +1,13 @@
-import { get, post, patch } from "@/services/api";
+import { get, post, patch, del } from "@/services/api";
 import { Salon } from "@/types/salon";
 
 export const MY_SALONES_QUERY_KEY = ["salones", "me"];
+
+export const ESTUDIANTES_GLOBALES_QUERY_KEY = (
+  sortBy?: string,
+  order?: string,
+  salonId?: string
+) => ["docentes", "estudiantes-global", { sortBy, order, salonId }];
 
 export interface SalonProgresoEstudiante {
   idalumno: string;
@@ -98,4 +104,44 @@ export async function darDeBajaEstudiante(
   idalumno: string
 ): Promise<void> {
   return del<void>(`/salones/${salonId}/estudiantes/${idalumno}`, { token });
+}
+
+// Estudiantes Globales
+export interface EstudianteGlobal {
+  idalumno: string;
+  nombre: string;
+  apellido: string;
+  correo: string;
+  idsalon: string;
+  nombresalon: string;
+  progreso_total: number;
+  promedio_puntuacion: number;
+  escenarios_completados: number;
+  total_intentos: number;
+}
+
+export interface EstudiantesGlobalesResponse {
+  estudiantes: EstudianteGlobal[];
+  total: number;
+}
+
+export async function fetchEstudiantesGlobales(
+  token: string,
+  options?: {
+    sort_by?: "nombre" | "promedio" | "interacciones" | "salon";
+    order?: "asc" | "desc";
+    idsalon?: string;
+  }
+): Promise<EstudianteGlobal[]> {
+  const params = new URLSearchParams();
+
+  if (options?.sort_by) params.append("sort_by", options.sort_by);
+  if (options?.order) params.append("order", options.order);
+  if (options?.idsalon) params.append("idsalon", options.idsalon);
+
+  const queryString = params.toString();
+  const endpoint = `/api/v1/docentes/me/estudiantes-global${queryString ? `?${queryString}` : ""}`;
+
+  const data = await get<EstudiantesGlobalesResponse>(endpoint, { token });
+  return data?.estudiantes ?? [];
 }
